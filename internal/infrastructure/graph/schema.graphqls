@@ -1,0 +1,19 @@
+type OrderResponse {
+    id: String!
+    price: Float!
+    tax: Float!
+    final_price: Float!
+}
+
+input OrderRequest {
+    price: Float!
+    tax: Float!
+}
+
+type Mutation {
+    createOrder(input: OrderRequest!): OrderResponse
+}
+
+type Query {
+    getOrders: [OrderResponse]
+}

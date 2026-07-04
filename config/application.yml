@@ -1,0 +1,10 @@
+db:
+  host: mysql
+  port: 3306
+  driver: mysql
+  user: root
+  password: root
+  name: orders
+
+web:
+  port: 8080
