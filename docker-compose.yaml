@@ -33,6 +33,21 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --requirepass root --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "root", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     build:
       context: .
@@ -50,6 +65,9 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-  
+      redis:
+        condition: service_healthy
+
 volumes:
   mysql_data:
+  redis_data:

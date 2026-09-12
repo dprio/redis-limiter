@@ -6,5 +6,15 @@ db:
   password: root
   name: orders
 
+rate-limiter:
+  ip-max-requests: 3
+  block-duration: 10s
+  window-duration: 10s
+
+redis:
+  host: redis:6379
+  password: root
+  db: 0
+
 web:
   port: 8080

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/dprio/redis-limiter/internal/infrastructure/cache"
 	"github.com/dprio/redis-limiter/internal/infrastructure/config"
 	"github.com/dprio/redis-limiter/internal/infrastructure/db"
 	eventhandlers "github.com/dprio/redis-limiter/internal/infrastructure/event/handlers"
@@ -8,7 +9,9 @@ import (
 	"github.com/dprio/redis-limiter/internal/infrastructure/graph/resolvers"
 	"github.com/dprio/redis-limiter/internal/infrastructure/grpc/grpcserver"
 	"github.com/dprio/redis-limiter/internal/infrastructure/grpc/service"
+	"github.com/dprio/redis-limiter/internal/infrastructure/ratelimiter"
 	"github.com/dprio/redis-limiter/internal/infrastructure/web/handlers"
+	"github.com/dprio/redis-limiter/internal/infrastructure/web/middlewares"
 	"github.com/dprio/redis-limiter/internal/infrastructure/web/webserver"
 	"github.com/dprio/redis-limiter/internal/usecase"
 	"github.com/dprio/redis-limiter/pkg/events"
@@ -29,11 +32,17 @@ func New() *App {
 	eventDispatcher := events.NewEventDispatcher()
 	eventhandlers.CreateAndRegisterEventHandlers(eventDispatcher)
 
+	redisClient := cache.NewRedisClient(conf.Redis)
+
+	limiter := ratelimiter.NewLimiterGateway(redisClient, conf.RateLimiter)
+
 	useCases := usecase.New(dataBase, eventDispatcher)
 
 	handlers := handlers.New(*useCases)
 
-	webServer := createWebServer(conf, handlers)
+	middlewares := middlewares.New(limiter)
+
+	webServer := createWebServer(conf, handlers, middlewares)
 
 	grpcServices := service.NewGRPCServices(useCases)
 
@@ -52,11 +61,11 @@ func New() *App {
 
 }
 
-func createWebServer(conf *config.Config, handls *handlers.Handlers) *webserver.WebServer {
+func createWebServer(conf *config.Config, handls *handlers.Handlers, middlewares *middlewares.Middlewares) *webserver.WebServer {
 	webServer := webserver.New(conf.Web)
 
-	webServer.AddHandler("POST", "/orders", handls.CreateOrderHandler.Create)
-	webServer.AddHandler("GET", "/orders", handls.CreateOrderHandler.GetAll)
+	webServer.AddHandler("POST", "/orders", middlewares.RateLimitMiddleware.Handle(handls.CreateOrderHandler.Create))
+	webServer.AddHandler("GET", "/orders", middlewares.RateLimitMiddleware.Handle(handls.CreateOrderHandler.GetAll))
 
 	return webServer
 }
