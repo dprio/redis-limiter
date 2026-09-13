@@ -58,6 +58,7 @@ curl --location 'http://localhost:8080/orders' \
 curl --location 'http://localhost:8080/orders' \
 --header 'API_KEY': {token}'
 ```
+ <br>
 
-
-Temos exemplos das requests em endpoint.http
+> [!NOTE]
+> **É possível executar as requests pelo arquivo de endpoint.http **
