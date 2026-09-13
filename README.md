@@ -44,6 +44,9 @@ curl --location 'http://localhost:8080/tokens' \
 
 Nas resposta, obtemos um token que pode ser passado no header nas requests de order
 
+>[!WARNING]
+> O token não foi pensado para ser uma implementação real produtiva. A implementação é apenas para exemplificar a associação de uma configuração de ratelimit a um entidade de identificação.
+
 ```
 curl --location 'http://localhost:8080/orders' \
 --header 'Content-Type: application/json' \
@@ -61,4 +64,4 @@ curl --location 'http://localhost:8080/orders' \
  <br>
 
 > [!NOTE]
-> **É possível executar as requests pelo arquivo de endpoint.http **
+> **É possível executar as requests pelo arquivo de endpoint.http**
