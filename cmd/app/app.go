@@ -27,14 +27,14 @@ type App struct {
 func New() *App {
 	conf := config.New()
 
-	dataBase := db.New(conf.DB)
-
 	eventDispatcher := events.NewEventDispatcher()
 	eventhandlers.CreateAndRegisterEventHandlers(eventDispatcher)
 
-	redisClient := cache.NewRedisClient(conf.Redis)
+	caches := cache.NewCaches(conf)
 
-	limiter := ratelimiter.NewLimiterGateway(redisClient, conf.RateLimiter)
+	dataBase := db.New(conf.DB, caches)
+
+	limiter := ratelimiter.NewLimiterGateway(caches.Client, dataBase.TokenRepository, conf.RateLimiter)
 
 	useCases := usecase.New(dataBase, eventDispatcher)
 
@@ -66,6 +66,8 @@ func createWebServer(conf *config.Config, handls *handlers.Handlers, middlewares
 
 	webServer.AddHandler("POST", "/orders", middlewares.RateLimitMiddleware.Handle(handls.CreateOrderHandler.Create))
 	webServer.AddHandler("GET", "/orders", middlewares.RateLimitMiddleware.Handle(handls.CreateOrderHandler.GetAll))
+
+	webServer.AddHandler("POST", "/tokens", handls.CreateTokenHandler.Create)
 
 	return webServer
 }

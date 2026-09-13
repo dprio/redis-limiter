@@ -27,13 +27,13 @@ func NewRedisClient(cfg *config.Redis) Client {
 	return &redisClient{redis: rds}
 }
 
-func (r *redisClient) Get(ctx context.Context, key string) (any, error) {
+func (r *redisClient) Get(ctx context.Context, key string) (string, error) {
 	val, err := r.redis.Get(ctx, key).Result()
 	switch {
 	case errors.Is(err, redis.Nil):
-		return nil, ErrKeyNotFound
+		return "", ErrKeyNotFound
 	case err != nil:
-		return nil, err
+		return "", err
 	default:
 		return val, nil
 	}

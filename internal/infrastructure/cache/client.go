@@ -9,7 +9,7 @@ import (
 var ErrKeyNotFound = errors.New("key not found")
 
 type Client interface {
-	Get(ctx context.Context, key string) (any, error)
+	Get(ctx context.Context, key string) (string, error)
 	Increment(ctx context.Context, key string, ttl time.Duration) (int64, error)
 	Set(ctx context.Context, key string, value any, ttl time.Duration) error
 }
