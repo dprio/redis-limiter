@@ -1,6 +1,8 @@
-# credis-limiter
+# redis-limiter
 
-Este projeto é uma aplicação que possibilita uma simples criação de order e consulta das orders criadas através de diferentes servidores (web, graphql e grpc)
+Este projeto é uma exemplificação da utilização do redis como um middleware de rate-limit. 
+
+O middleware está aplicado em dois endpoints, de listagem de orders e criação de order. O controle de rate-limit é feito por IP ou por um token passado como header (`API_KEY`)
 
 ## Pré-requisitos
 - Docker e Docker Compose
@@ -15,7 +17,6 @@ Este projeto é uma aplicação que possibilita uma simples criação de order e
 ## Funcionamento
 
 ### Criação de order
-#### web 
 ```
 curl --location 'http://localhost:8080/orders' \
 --header 'Content-Type: application/json' \
@@ -25,57 +26,38 @@ curl --location 'http://localhost:8080/orders' \
 }'
 ```
 
-#### GraphQL
-Acessar a url http://localhost:8081/ e rora a mutation:
-
-```
-mutation createOrder {
-  createOrder(
-    input: {
-      price: 1.13, 
-      tax: 10.51
-    }
-  ){
-    id
-    price
-    tax
-    final_price
-  }
-}
-```
-
-#### gRPC
-No terminal inciar o o evans 
-```
-evans -r repl
-```
-
-Selecionar o serviço de criação de order
-
 ### Consulta de orders
-#### web 
 ```
 curl --location 'http://localhost:8080/orders'
 ```
 
-#### GraphQL
-Acessar a url http://localhost:8081/ e rodar a query:
+### Utilizando o token
+#### Primeiro é necessário criar o token configurando o número de requests possíveis no período avaliado.
 
 ```
-query getOrders {
-  getOrders{
-      id
-      price
-      tax
-      final_price
-  }
-}
+curl --location 'http://localhost:8080/tokens' \
+--header 'Content-Type: application/json' \
+--data '{
+    "total_requests": 5
+}'
 ```
 
-#### gRPC
-No terminal inciar o evans 
+Nas resposta, obtemos um token que pode ser passado no header nas requests de order
+
 ```
-evans -r repl
+curl --location 'http://localhost:8080/orders' \
+--header 'Content-Type: application/json' \
+--header 'API_KEY': {token}'\
+--data '{
+    "price": 101.01,
+    "tax": 11.5
+}'
 ```
 
-Selecionar o serviço de busca de orders
+```
+curl --location 'http://localhost:8080/orders' \
+--header 'API_KEY': {token}'
+```
+
+
+Temos exemplos das requests em endpoint.http
